@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 # For LLM calls within pillar/reflector functions
 from google.adk.models.lite_llm import LiteLlm  # To use LiteLlm for helper LLM calls
+from starlette.middleware.cors import CORSMiddleware
 
 # --- Load .env file ---
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -57,6 +58,29 @@ app = FastAPI(
     title="Aura Agent A2A Wrapper (NCF Prototype)",
     description="Exposes the Aura (NCF) ADK agent via the A2A protocol, with multi-agent inspired NCF prompt building."
 )
+
+
+# --- Configuração do CORS ---
+# Adicione estas linhas:
+origins = [
+    "http://localhost",  # Se você servir o HTML de localhost (ex: python -m http.server)
+    "http://localhost:8000", # Adicione a porta específica se servir o cliente HTML de lá
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
+    "null", # Para permitir a origem 'null' de arquivos locais file:///
+    "file://", # Embora 'null' geralmente cubra isso, não custa adicionar.
+    # Adicione outras origens se necessário, ex: seu ngrok URL se for testar remotamente
+    # "https://your-ngrok-url.ngrok-free.app"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Lista de origens permitidas (ou ["*"] para todas, menos seguro)
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos os métodos (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Permite todos os cabeçalhos
+)
+# --- Fim da Configuração do CORS ---
 
 # --- Agent Card (already updated in previous step, ensure it's correct) ---
 AGENT_CARD_DATA = AgentCard(
@@ -555,7 +579,7 @@ async def handle_a2a_rpc(rpc_request: A2AJsonRpcRequest, http_request: FastAPIRe
             # Add assistant's response to persistent history
             current_adk_session.state['conversation_history'].append(
                 {"role": "assistant", "content": adk_agent_final_text_response})
-            adk_runner.session_service.update_session(current_adk_session)  # Persist state
+
 
             # --- Aura-Reflector: Analisar a interação ---
             # Chamada síncrona para o protótipo. Em produção, poderia ser assíncrona.
