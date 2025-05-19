@@ -1,4 +1,6 @@
 # a2a_wrapper/main.py
+import inspect
+
 import uvicorn
 from fastapi import FastAPI, Request as FastAPIRequest
 from fastapi.responses import JSONResponse
@@ -453,11 +455,43 @@ async def handle_a2a_rpc(rpc_request: A2AJsonRpcRequest, http_request: FastAPIRe
 
             current_adk_session: Optional[ADKSession] = None
             if adk_session_id:
-                current_adk_session = adk_runner.session_service.get_session(ADK_APP_NAME, adk_user_id, adk_session_id)
+                logger.info(f"Attempting to retrieve session for ADK Session ID: {adk_session_id}")
+                logger.info(f"  app_name='{ADK_APP_NAME}', user_id='{adk_user_id}'")
+                logger.info(f"  Type of adk_runner.session_service: {type(adk_runner.session_service)}")
+                try:
+                    # Log the signature before calling
+                    actual_get_session_method = adk_runner.session_service.get_session
+                    logger.info(
+                        f"  Signature of adk_runner.session_service.get_session: {inspect.signature(actual_get_session_method)}")
 
-            if not current_adk_session:
+                    current_adk_session = actual_get_session_method(
+                        app_name=ADK_APP_NAME,
+                        user_id=adk_user_id,
+                        session_id=adk_session_id
+                    )
+                    if current_adk_session:
+                        logger.info(f"  Successfully retrieved ADK session.")
+                    else:
+                        logger.warning(
+                            f"  get_session returned None for ADK Session ID: {adk_session_id}. Session might have expired or not found in current service instance.")
+                        # This session ID might be from a previous run before a reload
+                        # We might need to treat this as a new session if it's None
+                        # For now, let it proceed to the 'if not current_adk_session:' block below
+
+                except TypeError as te:
+                    logger.error(f"  TypeError during get_session: {te}", exc_info=True)
+                    # This block will catch the specific error you're seeing
+                    # The inspect.signature log above will be key
+                    raise  # Re-raise to see the full FastAPI error response
+                except Exception as e_get:
+                    logger.error(f"  Unexpected error during get_session: {e_get}", exc_info=True)
+                    raise
+
+            if not current_adk_session:  # This handles both adk_session_id being None initially, or get_session returning None
                 adk_session_id = f"adk_session_for_{adk_session_map_key}_{str(uuid.uuid4())[:8]}"
                 a2a_task_to_adk_session_map[adk_session_map_key] = adk_session_id
+                logger.info(
+                    f"  No existing session found or usable. Creating new ADK session: '{adk_session_id}' for map key '{adk_session_map_key}'")
                 current_adk_session = adk_runner.session_service.create_session(
                     app_name=ADK_APP_NAME,
                     user_id=adk_user_id,
@@ -467,6 +501,7 @@ async def handle_a2a_rpc(rpc_request: A2AJsonRpcRequest, http_request: FastAPIRe
                 logger.info(
                     f"A2A Wrapper: Created ADK session '{adk_session_id}' (mapped from '{adk_session_map_key}') for user '{adk_user_id}'")
             else:
+                # This else block might not be hit if get_session fails with TypeError before this point
                 logger.info(
                     f"A2A Wrapper: Reusing ADK session '{adk_session_id}' (mapped from '{adk_session_map_key}') for user '{adk_user_id}'")
 
