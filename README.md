@@ -42,6 +42,9 @@ This project demonstrates advanced concepts in agent architecture, including mul
     *   **`MemoryConnector`:** Builds a graph of memory connections and enhances retrieval.
     *   **`embedding_utils.py`:** Handles loading various sentence-transformer models for different memory types and computes embeddings.
     *   **`memory_models.py`:** Defines the `Memory` Pydantic model.
+  
+    *   ![image](https://github.com/user-attachments/assets/600c9608-c358-4b06-a6ae-94b5bf2655ef) (Added to Memory: "User Likes Fishes" user Input: " Hello, I like Fish" 
+
 5.  **Aura Reflector (`a2a_wrapper/main.py` - `aura_reflector_analisar_interacao`):**
     *   After the main agent responds, the Reflector analyzes the user's utterance and Aura's response.
     *   It calls an LLM with a specific prompt to decide if any part of the interaction warrants being stored as a new memory in MemoryBlossom.
