@@ -60,10 +60,8 @@ This project demonstrates advanced concepts in agent architecture, including mul
 ## Installation
 
 1.  **Clone the repository:**
-    ```bash
-    git clone <your-repository-url>
-    cd <your-repository-name>
-    ```
+
+
 
 2.  **Create and activate a virtual environment:**
     ```bash
@@ -197,16 +195,6 @@ This allows Aura to learn and consolidate important information from conversatio
 
 Contributions are welcome! Please feel free to submit pull requests or open issues for bugs, feature requests, or improvements.
 
-# Create .env.example:
-Create a file named .env.example with the following content:
-OPENROUTER_API_KEY="sk-or-v1-YOUR_OPENROUTER_API_KEY_HERE"
-A2A_WRAPPER_HOST="0.0.0.0"
-A2A_WRAPPER_PORT="8094"
-A2A_WRAPPER_BASE_URL="http://localhost:8094"
-MEMORY_BLOSSOM_PERSISTENCE_PATH="memory_blossom_data.json"
-LOG_LEVEL="INFO"
-# Optional for OpenRouter Analytics
-# OR_SITE_URL="https://your-site.com"
-# OR_APP_NAME="AuraNCF"
+
 
 
