@@ -1,0 +1,11 @@
+google-adk
+fastapi
+uvicorn[standard] # For the web server
+pydantic
+sentence-transformers # For MemoryBlossom embeddings
+numpy
+scikit-learn # For cosine_similarity if not using numpy's dot product directly
+# Add any other specific model libraries if not covered by ADK/LiteLLM or SentenceTransformers
+# e.g., openai, anthropic if using LiteLLM and want to be explicit
+litellm # If you plan to use models beyond default Gemini via ADK
+python-dotenv # For managing API keys if you use .env files
