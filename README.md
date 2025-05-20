@@ -7,6 +7,9 @@ This project demonstrates advanced concepts in agent architecture, including mul
 
 DEMO: https://aura-dahu.onrender.com/  
 
+Aura Thru AiraHub In Claude Desktop
+![image](https://github.com/user-attachments/assets/31dd6a52-aa1f-4018-9903-41369331eb7a)
+
 ## Key Features
 
 *   **Narrative Context Framing (NCF):** A multi-pillar approach to building rich contextual prompts for the core LLM, including:
