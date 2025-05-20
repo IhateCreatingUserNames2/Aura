@@ -4,6 +4,9 @@ Aura is a prototype conversational AI agent designed for deep, contextual unders
 
 This project demonstrates advanced concepts in agent architecture, including multi-layered memory, dynamic prompt construction, and autonomous learning from interactions.
 
+
+DEMO: https://aura-dahu.onrender.com/  
+
 ## Key Features
 
 *   **Narrative Context Framing (NCF):** A multi-pillar approach to building rich contextual prompts for the core LLM, including:
