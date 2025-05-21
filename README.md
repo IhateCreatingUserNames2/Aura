@@ -10,6 +10,8 @@ DEMO: https://aura-dahu.onrender.com/
 Aura Thru AiraHub In Claude Desktop
 ![image](https://github.com/user-attachments/assets/31dd6a52-aa1f-4018-9903-41369331eb7a)
 
+Aira hub CURL to register Aura on Airahub: curl -X POST -H "Content-Type: application/json" -d "{\"url\": \"https://308f-189-28-2-52.ngrok-free.app\", \"name\": \"AURA_ADK_A2A\", \"description\": \"ADK Orchestrator (Aura) with MemoryBlossom, exposed via A2A and ngrok.\", \"version\": \"1.2.0-ncf-proto\", \"mcp_tools\": [], \"a2a_skills\": [], \"aira_capabilities\": [\"a2a\"], \"status\": \"online\", \"tags\": [\"adk\", \"memory\", \"a2a\", \"conversational\", \"ngrok\"], \"category\": \"ExperimentalAgents\", \"provider\": {\"name\": \"LocalDevNgrok\"}, \"mcp_stream_url\": null}" https://airahub2.onrender.com/register 
+
 ## Key Features
 
 *   **Narrative Context Framing (NCF):** A multi-pillar approach to building rich contextual prompts for the core LLM, including:
