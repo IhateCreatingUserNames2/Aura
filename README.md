@@ -5,7 +5,7 @@ Aura is a prototype conversational AI agent designed for deep, contextual unders
 This project demonstrates advanced concepts in agent architecture, including multi-layered memory, dynamic prompt construction, and autonomous learning from interactions.
 
 
-DEMO: https://aura-dahu.onrender.com/  
+DEMO: https://aura-dahu.onrender.com/  (if its offline it is because its running on my PC and i turned it off) 
 
 Aura Thru AiraHub In Claude Desktop
 ![image](https://github.com/user-attachments/assets/31dd6a52-aa1f-4018-9903-41369331eb7a)
