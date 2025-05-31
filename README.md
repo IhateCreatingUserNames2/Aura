@@ -1,8 +1,12 @@
 # Aura: Advanced Conversational AI with Narrative Context Framing and A2A Interoperability
 
+Aura is getting a integration with AppAgentX : https://github.com/Westlake-AGI-Lab/AppAgentX 
+src https://github.com/IhateCreatingUserNames2/Aura_AppAgentX 
+
 Aura is a prototype conversational AI agent designed for deep, contextual understanding over extended interactions. It leverages a unique **Narrative Context Framing (NCF)** prompting strategy, a sophisticated long-term memory system called **MemoryBlossom**, and an autonomous **Reflector** module for intelligent memory consolidation. Aura is exposed via the Agent-to-Agent (A2A) protocol for interoperability.
 
 This project demonstrates advanced concepts in agent architecture, including multi-layered memory, dynamic prompt construction, and autonomous learning from interactions.
+
 
 
 DEMO: https://aura-dahu.onrender.com/  (if its offline it is because its running on my PC and i turned it off) 
