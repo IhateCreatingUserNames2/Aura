@@ -527,6 +527,19 @@
         let chatHistory = []; // Store chat history in memory
         const API_BASE = 'https://5651-2804-1e68-c209-cba3-2105-1b8b-5ae1-af9a.ngrok-free.app';
 
+        // Function to get headers for ngrok
+        function getNgrokHeaders(includeAuth = false) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+            
+            if (includeAuth && authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            return headers;
+        }
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -601,9 +614,7 @@
 
             try {
                 const response = await fetch(`${API_BASE}/auth/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
+                    headers: getNgrokHeaders(true)
                 });
 
                 if (response.ok) {
@@ -684,9 +695,7 @@
 
                 const response = await fetch(`${API_BASE}${endpoint}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getNgrokHeaders(),
                     body: JSON.stringify(body)
                 });
 
@@ -731,16 +740,14 @@
 
             try {
                 const response = await fetch(`${API_BASE}/agents/list`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
+                    headers: getNgrokHeaders(true)
                 });
 
                 if (response.ok) {
                     const agents = await response.json();
                     displayAgents(agents);
                 } else {
-                    console.error('Failed to load agents');
+                    console.error('Failed to load agents', response.status, response.statusText);
                 }
             } catch (error) {
                 console.error('Error loading agents:', error);
@@ -810,10 +817,7 @@
             try {
                 const response = await fetch(`${API_BASE}/agents/create`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
+                    headers: getNgrokHeaders(true),
                     body: JSON.stringify({
                         name,
                         persona,
@@ -952,10 +956,7 @@
             try {
                 const response = await fetch(`${API_BASE}/agents/${currentAgent.agent_id}/chat`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
+                    headers: getNgrokHeaders(true),
                     body: JSON.stringify({
                         message,
                         session_id: sessionId
