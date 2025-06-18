@@ -210,5 +210,12 @@ This allows Aura to learn and consolidate important information from conversatio
 Contributions are welcome! Please feel free to submit pull requests or open issues for bugs, feature requests, or improvements.
 
 
+## Comparisson to Other AI Companions
+![image](https://github.com/user-attachments/assets/458f4507-9bfc-49fd-83ed-50c83ccd127d)
+
+![image](https://github.com/user-attachments/assets/e82928f1-b80b-4772-a84f-a93bc66bff19)
+
+
+
 
 
