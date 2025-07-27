@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura AI - Create Your Own NCF-Enabled AI Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #2a2a2a;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: #ff4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff6666;
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .error-message {
+            background: #ff4444;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            background: #44ff44;
+            color: #0a0a0a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .ncf-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .agent-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .agent-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+        }
+
+        .agent-actions {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .agent-card:hover .agent-actions {
+            opacity: 1;
+        }
+
+        .agent-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .agent-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .agent-persona {
+            color: #999;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .agent-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .agent-capabilities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .capability-tag {
+            background: #2a2a2a;
+            color: #ccc;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .create-agent-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            border: 2px dashed #3a3a3a;
+            background: transparent;
+        }
+
+        .create-agent-card:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content.wide {
+            max-width: 800px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+
+        .label-subtitle {
+            font-size: 12px;
+            color: #999;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #3a3a3a;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .memory-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #2a2a2a;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .chat-container {
+            display: none;
+            height: calc(100vh - 100px);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .chat-header {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .chat-messages {
+            background: #0a0a0a;
+            height: calc(100% - 140px);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #1a1a1a;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+        }
+
+        .message.typing .message-content {
+            background: #2a2a2a;
+            color: #999;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 12px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            margin: 0;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+            background: #1a1a1a;
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 24px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .auth-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes typing {
+            0%, 20%, 50%, 80%, 100% {
+                opacity: 1;
+            }
+            40%, 60% {
+                opacity: 0.5;
+            }
+        }
+
+        .typing-indicator {
+            animation: typing 1.5s infinite;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #2a2a2a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Aura AI</div>
+            <div class="user-menu">
+                <span id="user-display">Guest</span>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfFwNPg5cZArilAbIhSI24BYWUkSUzGvsqI7z7CGOTieZBWUg/viewform?usp=dialog"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-secondary"
+                   id="feedback-link-btn">Feedback</a>
+                <button class="btn btn-secondary" id="auth-btn" onclick="showAuth()">Login</button>
+            </div>
+        </header>
+
+        <!-- Login/Register Form -->
+        <div id="auth-view" style="display: none;">
+            <div class="login-form">
+                <h2 style="text-align: center; margin-bottom: 24px;">Welcome to Aura AI</h2>
+                <div class="auth-tabs">
+                    <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+                    <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+                </div>
+
+                <div id="error-container"></div>
+
+                <form id="auth-form" onsubmit="handleAuth(event)">
+                    <div class="form-group" id="email-group" style="display: none;">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="your@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required placeholder="Your username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required placeholder="Your password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="auth-submit">Login</button>
+                </form>
+
+                <p style="text-align: center; margin-top: 16px; color: #999; font-size: 12px;">
+                    Create NCF-enabled AI companions with advanced memory and contextual understanding
+                </p>
+            </div>
+        </div>
+
+        <!-- Agents View -->
+        <div id="agents-view">
+            <h2 style="margin-bottom: 30px;">Your NCF-Enabled AI Companions</h2>
+            <div class="agents-grid" id="agents-grid">
+                <!-- Agent cards will be inserted here -->
+                <div class="agent-card create-agent-card" onclick="showCreateModal()">
+                    <div style="font-size: 48px; margin-bottom: 16px;">+</div>
+                    <div style="font-size: 18px; font-weight: 500;">Create New Aura</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 8px;">With NCF capabilities</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat View -->
+        <div id="chat-view" class="chat-container">
+            <div class="chat-header">
+                <button class="btn btn-secondary" onclick="showAgentsView()">← Back</button>
+                <div class="agent-avatar" id="chat-agent-avatar">A</div>
+                <div>
+                    <div class="agent-name" id="chat-agent-name">Aura</div>
+                    <div style="font-size: 12px; color: #666;">NCF-Enabled • Online</div>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Type your message..." onkeypress="handleMessageKeypress(event)">
+                <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Agent Modal -->
+    <div id="create-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 24px;">Create Your NCF-Enabled Aura</h2>
+            <p style="color: #999; font-size: 14px; margin-bottom: 24px;">
+                Every Aura you create will have advanced NCF capabilities including narrative foundation,
+                RAG memory retrieval, and reflective analysis for deep contextual understanding.
+            </p>
+
+            <div id="create-error-container"></div>
+
+            <form onsubmit="createAgent(event)">
+                <div class="form-group">
+                    <label for="agent-name">
+                        Name
+                        <div class="label-subtitle">Choose a unique name for your AI companion</div>
+                    </label>
+                    <input type="text" id="agent-name" required placeholder="e.g., Luna, Sage, Echo">
+                </div>
+
+                <div class="form-group">
+                    <label for="agent-persona">
+                        Short Description
+                        <div class="label-subtitle">A brief description of their role or expertise</div>
+                    </label>
+                    <input type="text" id="agent-persona" required placeholder="e.g., A wise philosopher, A creative artist">
+                </div>
+
+                <div class="form-group">
+                    <label for="agent-detailed">
+                        Detailed Personality
+                        <div class="label-subtitle">Describe their personality, background, communication style, interests, and unique traits</div>
+                    </label>
+                    <textarea id="agent-detailed" required placeholder="Describe their personality in detail. This helps shape how they think, communicate, and remember conversations. The more detail you provide, the more personalized your Aura will be."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" id="create-submit">Create Aura</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Agent Profile Modal -->
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 24px;">Edit Agent Profile</h2>
+
+            <div id="edit-profile-error-container"></div>
+
+            <form onsubmit="updateAgentProfile(event)">
+                <div class="form-group">
+                    <label for="edit-agent-name">
+                        Name
+                        <div class="label-subtitle">Update your AI companion's name</div>
+                    </label>
+                    <input type="text" id="edit-agent-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-agent-persona">
+                        Short Description
+                        <div class="label-subtitle">Update their role or expertise description</div>
+                    </label>
+                    <input type="text" id="edit-agent-persona" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-agent-detailed">
+                        Detailed Personality
+                        <div class="label-subtitle">Update their personality, background, and communication style</div>
+                    </label>
+                    <textarea id="edit-agent-detailed" required style="min-height: 120px;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" id="edit-profile-submit">Update Profile</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditProfileModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Memory Management Modal -->
+    <div id="memory-modal" class="modal">
+        <div class="modal-content wide">
+            <h2 style="margin-bottom: 24px;">Memory Management - <span id="memory-agent-name"></span></h2>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('export')">Export Memories</button>
+                <button class="tab" onclick="switchTab('upload')">Upload Memories</button>
+                <button class="tab" onclick="switchTab('analytics')">Analytics</button>
+            </div>
+
+            <!-- Export Tab -->
+            <div id="export-tab" class="tab-content active">
+                <div id="memory-stats" class="memory-stats">
+                    <!-- Stats will be populated here -->
+                </div>
+
+                <div class="form-group">
+                    <label for="export-format">Export Format</label>
+                    <select id="export-format">
+                        <option value="json">JSON (Complete data)</option>
+                        <option value="csv">CSV (Spreadsheet)</option>
+                        <option value="zip">ZIP (All formats)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="memory-types-filter">
+                        Memory Types to Export (optional)
+                        <div class="label-subtitle">Leave empty to export all types</div>
+                    </label>
+                    <input type="text" id="memory-types-filter" placeholder="e.g., Explicit,Emotional,Procedural">
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="exportMemories()" id="export-btn">Export Memories</button>
+                    <button class="btn btn-secondary" onclick="closeMemoryModal()">Close</button>
+                </div>
+            </div>
+
+            <!-- Upload Tab -->
+            <div id="upload-tab" class="tab-content">
+                <div class="file-upload-area" id="file-upload-area" onclick="document.getElementById('memory-file').click()">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+                    <div style="font-size: 16px; font-weight: 500;">Upload Memory File</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 8px;">Supports JSON and CSV files</div>
+                    <input type="file" id="memory-file" accept=".json,.csv" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="overwrite-existing" style="width: auto; margin-right: 8px;">
+                        Overwrite existing memories with same content
+                    </label>
+                </div>
+
+                <div id="upload-progress" style="display: none;">
+                    <div style="margin-bottom: 8px;">Uploading memories...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="upload-progress-fill"></div>
+                    </div>
+                </div>
+
+                <div id="upload-results" style="display: none; margin-top: 16px;"></div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="uploadMemories()" id="upload-btn" disabled>Upload Memories</button>
+                    <button class="btn btn-secondary" onclick="closeMemoryModal()">Close</button>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics-tab" class="tab-content">
+                <div id="analytics-container">
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        Click "Load Analytics" to view detailed memory insights
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="loadAnalytics()" id="analytics-btn">Load Analytics</button>
+                    <button class="btn btn-secondary" onclick="closeMemoryModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        let currentUser = null;
+        let currentAgent = null;
+        let sessionId = null;
+        let authToken = null;
+        let currentAuthMode = 'login';
+        let chatHistory = []; // Store chat history in memory
+        let currentEditingAgent = null;
+        let selectedFile = null;
+        const API_BASE = 'https://3e07-2804-1e68-c209-aa02-a56c-e22c-5a51-ab8.ngrok-free.app';
+
+        // Function to get headers for ngrok
+        function getNgrokHeaders(includeAuth = false) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+
+            if (includeAuth && authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            return headers;
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for stored auth token
+            authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                validateToken();
+            } else {
+                showAuth();
+            }
+
+            // Setup file upload drag and drop
+            setupFileUpload();
+        });
+
+        // Chat history persistence functions
+        function getChatHistoryKey() {
+            return `chat_history_${currentAgent.agent_id}_${sessionId}`;
+        }
+
+        function saveChatHistory() {
+            if (currentAgent && sessionId) {
+                const historyKey = getChatHistoryKey();
+                const historyData = {
+                    history: chatHistory,
+                    timestamp: Date.now(),
+                    agentId: currentAgent.agent_id,
+                    sessionId: sessionId
+                };
+                localStorage.setItem(historyKey, JSON.stringify(historyData));
+            }
+        }
+
+        function loadChatHistory() {
+            if (currentAgent && sessionId) {
+                const historyKey = getChatHistoryKey();
+                const stored = localStorage.getItem(historyKey);
+
+                if (stored) {
+                    try {
+                        const data = JSON.parse(stored);
+                        chatHistory = data.history || [];
+
+                        // Clear existing messages and reload from history
+                        const messagesContainer = document.getElementById('chat-messages');
+                        messagesContainer.innerHTML = '';
+
+                        // Restore messages to UI
+                        chatHistory.forEach(msg => {
+                            addMessageToUI(msg.role, msg.content);
+                        });
+                    } catch (error) {
+                        console.error('Error loading chat history:', error);
+                        chatHistory = [];
+                    }
+                } else {
+                    chatHistory = [];
+                }
+            }
+        }
+
+        function clearChatHistory() {
+            if (currentAgent && sessionId) {
+                const historyKey = getChatHistoryKey();
+                localStorage.removeItem(historyKey);
+            }
+        }
+
+        // Authentication functions
+        async function validateToken() {
+            if (!authToken) {
+                showAuth();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    currentUser = await response.json();
+                    document.getElementById('user-display').textContent = currentUser.username;
+                    document.getElementById('auth-btn').textContent = 'Logout';
+                    document.getElementById('auth-btn').onclick = logout;
+                    showAgentsView();
+                    loadAgents();
+                } else {
+                    localStorage.removeItem('authToken');
+                    authToken = null;
+                    showAuth();
+                }
+            } catch (error) {
+                console.error('Token validation failed:', error);
+                localStorage.removeItem('authToken');
+                authToken = null;
+                showAuth();
+            }
+        }
+
+        function showAuth() {
+            document.getElementById('auth-view').style.display = 'block';
+            document.getElementById('agents-view').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'none';
+        }
+
+        function showAgentsView() {
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('agents-view').style.display = 'block';
+            document.getElementById('chat-view').style.display = 'none';
+            // Clear chat state when returning to agents view
+            currentAgent = null;
+            sessionId = null;
+            chatHistory = [];
+        }
+
+        function switchAuthTab(mode) {
+            currentAuthMode = mode;
+            const tabs = document.querySelectorAll('.auth-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const emailGroup = document.getElementById('email-group');
+            const submitBtn = document.getElementById('auth-submit');
+
+            if (mode === 'register') {
+                emailGroup.style.display = 'block';
+                submitBtn.textContent = 'Register';
+                document.getElementById('email').required = true;
+            } else {
+                emailGroup.style.display = 'none';
+                submitBtn.textContent = 'Login';
+                document.getElementById('email').required = false;
+            }
+        }
+
+        async function handleAuth(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('auth-submit');
+            const errorContainer = document.getElementById('error-container');
+
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Processing...';
+            errorContainer.innerHTML = '';
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+
+            try {
+                const endpoint = currentAuthMode === 'register' ? '/auth/register' : '/auth/login';
+                const body = currentAuthMode === 'register'
+                    ? { username, password, email }
+                    : { username, password };
+
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: getNgrokHeaders(),
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.access_token;
+                    localStorage.setItem('authToken', authToken);
+                    currentUser = data;
+
+                    document.getElementById('user-display').textContent = data.username;
+                    document.getElementById('auth-btn').textContent = 'Logout';
+                    document.getElementById('auth-btn').onclick = logout;
+
+                    showAgentsView();
+                    loadAgents();
+                } else {
+                    errorContainer.innerHTML = `<div class="error-message">${data.detail || 'Authentication failed'}</div>`;
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                errorContainer.innerHTML = '<div class="error-message">Network error. Please try again.</div>';
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = currentAuthMode === 'register' ? 'Register' : 'Login';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            authToken = null;
+            currentUser = null;
+            document.getElementById('user-display').textContent = 'Guest';
+            document.getElementById('auth-btn').textContent = 'Login';
+            document.getElementById('auth-btn').onclick = showAuth;
+            showAuth();
+        }
+
+        // Agent management functions
+        async function loadAgents() {
+            if (!authToken) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/list`, {
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    const agents = await response.json();
+                    displayAgents(agents);
+                } else {
+                    console.error('Failed to load agents', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error('Error loading agents:', error);
+            }
+        }
+
+        function displayAgents(agents) {
+            const grid = document.getElementById('agents-grid');
+            // Clear existing cards except create button
+            while (grid.children.length > 1) {
+                grid.removeChild(grid.firstChild);
+            }
+
+            // Add agent cards
+            agents.forEach(agent => {
+                const card = document.createElement('div');
+                card.className = 'agent-card';
+                card.innerHTML = `
+                    <div class="agent-actions">
+                        <button class="btn btn-small btn-secondary" onclick="event.stopPropagation(); showEditProfileModal('${agent.agent_id}')" title="Edit Profile">✏️</button>
+                        <button class="btn btn-small btn-secondary" onclick="event.stopPropagation(); showMemoryModal('${agent.agent_id}')" title="Memory Management">🧠</button>
+                        <button class="btn btn-small btn-danger" onclick="event.stopPropagation(); deleteAgent('${agent.agent_id}')" title="Delete Agent">🗑️</button>
+                    </div>
+                    <div class="agent-avatar" onclick="openChat('${agent.agent_id}')">${agent.name[0]}</div>
+                    <div class="agent-name" onclick="openChat('${agent.agent_id}')">
+                        ${agent.name}
+                        <span class="ncf-badge">NCF</span>
+                    </div>
+                    <div class="agent-persona" onclick="openChat('${agent.agent_id}')">${agent.persona}</div>
+                    <div class="agent-stats">
+                        <span>Created ${new Date(agent.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="agent-capabilities">
+                        <span class="capability-tag">Narrative Foundation</span>
+                        <span class="capability-tag">RAG Memory</span>
+                        <span class="capability-tag">Reflector</span>
+                        <span class="capability-tag">Contextual</span>
+                    </div>
+                `;
+                grid.insertBefore(card, grid.lastElementChild);
+            });
+        }
+
+        function showCreateModal() {
+            if (!authToken) {
+                showAuth();
+                return;
+            }
+            document.getElementById('create-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('create-modal').classList.remove('active');
+            document.getElementById('create-error-container').innerHTML = '';
+        }
+
+        async function createAgent(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('create-submit');
+            const errorContainer = document.getElementById('create-error-container');
+
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Creating...';
+            errorContainer.innerHTML = '';
+
+            const name = document.getElementById('agent-name').value;
+            const persona = document.getElementById('agent-persona').value;
+            const detailed_persona = document.getElementById('agent-detailed').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/create`, {
+                    method: 'POST',
+                    headers: getNgrokHeaders(true),
+                    body: JSON.stringify({
+                        name,
+                        persona,
+                        detailed_persona
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeModal();
+                    loadAgents();
+
+                    // Show success message
+                    showSuccessMessage(`${name} created successfully with full NCF capabilities!`);
+
+                    // Clear form
+                    document.getElementById('agent-name').value = '';
+                    document.getElementById('agent-persona').value = '';
+                    document.getElementById('agent-detailed').value = '';
+                } else {
+                    errorContainer.innerHTML = `<div class="error-message">${data.detail || 'Failed to create agent'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error creating agent:', error);
+                errorContainer.innerHTML = '<div class="error-message">Network error. Please try again.</div>';
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Create Aura';
+            }
+        }
+
+        // Profile editing functions
+        async function showEditProfileModal(agentId) {
+            currentEditingAgent = agentId;
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/${agentId}/profile`, {
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    const profile = await response.json();
+
+                    document.getElementById('edit-agent-name').value = profile.name;
+                    document.getElementById('edit-agent-persona').value = profile.persona;
+                    document.getElementById('edit-agent-detailed').value = profile.detailed_persona;
+
+                    document.getElementById('edit-profile-modal').classList.add('active');
+                } else {
+                    showErrorMessage('Failed to load agent profile');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showErrorMessage('Error loading agent profile');
+            }
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('edit-profile-modal').classList.remove('active');
+            document.getElementById('edit-profile-error-container').innerHTML = '';
+            currentEditingAgent = null;
+        }
+
+        async function updateAgentProfile(event) {
+            event.preventDefault();
+
+            if (!currentEditingAgent) return;
+
+            const submitBtn = document.getElementById('edit-profile-submit');
+            const errorContainer = document.getElementById('edit-profile-error-container');
+
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Updating...';
+            errorContainer.innerHTML = '';
+
+            const name = document.getElementById('edit-agent-name').value;
+            const persona = document.getElementById('edit-agent-persona').value;
+            const detailed_persona = document.getElementById('edit-agent-detailed').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/${currentEditingAgent}/profile`, {
+                    method: 'PUT',
+                    headers: getNgrokHeaders(true),
+                    body: JSON.stringify({
+                        name,
+                        persona,
+                        detailed_persona
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeEditProfileModal();
+                    loadAgents();
+                    showSuccessMessage('Agent profile updated successfully!');
+                } else {
+                    errorContainer.innerHTML = `<div class="error-message">${data.detail || 'Failed to update profile'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                errorContainer.innerHTML = '<div class="error-message">Network error. Please try again.</div>';
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Update Profile';
+            }
+        }
+
+        // Memory management functions
+        async function showMemoryModal(agentId) {
+            currentEditingAgent = agentId;
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/${agentId}/profile`, {
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    const profile = await response.json();
+                    document.getElementById('memory-agent-name').textContent = profile.name;
+
+                    // Load memory stats
+                    await loadMemoryStats(agentId);
+
+                    document.getElementById('memory-modal').classList.add('active');
+                } else {
+                    showErrorMessage('Failed to load agent information');
+                }
+            } catch (error) {
+                console.error('Error loading agent info:', error);
+                showErrorMessage('Error loading agent information');
+            }
+        }
+
+        function closeMemoryModal() {
+            document.getElementById('memory-modal').classList.remove('active');
+            currentEditingAgent = null;
+            selectedFile = null;
+            document.getElementById('upload-btn').disabled = true;
+            document.getElementById('upload-progress').style.display = 'none';
+            document.getElementById('upload-results').style.display = 'none';
+        }
+
+        function switchTab(tabName) {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Add active class to selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        async function loadMemoryStats(agentId) {
+            try {
+                const response = await fetch(`${API_BASE}/agents/${agentId}/memories?limit=1`, {
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const statsContainer = document.getElementById('memory-stats');
+
+                    statsContainer.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-number">${data.total_memories}</div>
+                            <div class="stat-label">Total Memories</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${data.memory_types.length}</div>
+                            <div class="stat-label">Memory Types</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">NCF</div>
+                            <div class="stat-label">System Enabled</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">🧠</div>
+                            <div class="stat-label">Isolated System</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading memory stats:', error);
+            }
+        }
+
+        async function exportMemories() {
+            if (!currentEditingAgent) return;
+
+            const exportBtn = document.getElementById('export-btn');
+            const format = document.getElementById('export-format').value;
+            const memoryTypes = document.getElementById('memory-types-filter').value;
+
+            exportBtn.classList.add('loading');
+            exportBtn.textContent = 'Exporting...';
+
+            try {
+                let url = `${API_BASE}/agents/${currentEditingAgent}/memories/export?format=${format}`;
+                if (memoryTypes.trim()) {
+                    url += `&memory_types=${encodeURIComponent(memoryTypes.trim())}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    if (format === 'json') {
+                        const data = await response.json();
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        downloadFile(blob, `${data.agent_name}_memories.json`);
+                    } else {
+                        const blob = await response.blob();
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        const filename = contentDisposition
+                            ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+                            : `memories.${format}`;
+                        downloadFile(blob, filename);
+                    }
+                    showSuccessMessage('Memories exported successfully!');
+                } else {
+                    const error = await response.json();
+                    showErrorMessage(error.detail || 'Export failed');
+                }
+            } catch (error) {
+                console.error('Error exporting memories:', error);
+                showErrorMessage('Network error during export');
+            } finally {
+                exportBtn.classList.remove('loading');
+                exportBtn.textContent = 'Export Memories';
+            }
+        }
+
+        function downloadFile(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // File upload functions
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('file-upload-area');
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect({ target: { files } });
+                }
+            });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const validTypes = ['.json', '.csv'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+            if (!validTypes.includes(fileExtension)) {
+                showErrorMessage('Please select a JSON or CSV file');
+                return;
+            }
+
+            selectedFile = file;
+            document.getElementById('upload-btn').disabled = false;
+
+            // Update upload area text
+            const uploadArea = document.getElementById('file-upload-area');
+            uploadArea.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+                <div style="font-size: 16px; font-weight: 500;">${file.name}</div>
+                <div style="font-size: 12px; color: #999; margin-top: 8px;">Ready to upload</div>
+            `;
+        }
+
+        async function uploadMemories() {
+            if (!currentEditingAgent || !selectedFile) return;
+
+            const uploadBtn = document.getElementById('upload-btn');
+            const progressContainer = document.getElementById('upload-progress');
+            const resultsContainer = document.getElementById('upload-results');
+            const overwriteExisting = document.getElementById('overwrite-existing').checked;
+
+            uploadBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            resultsContainer.style.display = 'none';
+
+            // Animate progress bar
+            const progressFill = document.getElementById('upload-progress-fill');
+            progressFill.style.width = '30%';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('overwrite_existing', overwriteExisting);
+
+                const response = await fetch(`${API_BASE}/agents/${currentEditingAgent}/memories/upload/file?overwrite_existing=${overwriteExisting}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: formData
+                });
+
+                progressFill.style.width = '100%';
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    resultsContainer.innerHTML = `
+                        <div class="success-message">
+                            <strong>Upload Complete!</strong><br>
+                            Total memories: ${result.total_uploaded}<br>
+                            Successful: ${result.successful_uploads}<br>
+                            Failed: ${result.failed_uploads}<br>
+                            Memory types added: ${result.memory_types_added.join(', ')}
+                        </div>
+                        ${result.errors.length > 0 ? `
+                            <div style="margin-top: 12px; font-size: 12px; color: #999;">
+                                <strong>Errors:</strong><br>
+                                ${result.errors.slice(0, 5).join('<br>')}
+                                ${result.errors.length > 5 ? `<br>... and ${result.errors.length - 5} more` : ''}
+                            </div>
+                        ` : ''}
+                    `;
+
+                    showSuccessMessage('Memories uploaded successfully!');
+                    await loadMemoryStats(currentEditingAgent);
+                } else {
+                    const error = await response.json();
+                    resultsContainer.innerHTML = `<div class="error-message">${error.detail || 'Upload failed'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error uploading memories:', error);
+                resultsContainer.innerHTML = '<div class="error-message">Network error during upload</div>';
+            } finally {
+                progressContainer.style.display = 'none';
+                resultsContainer.style.display = 'block';
+                uploadBtn.disabled = false;
+            }
+        }
+
+        async function loadAnalytics() {
+            if (!currentEditingAgent) return;
+
+            const analyticsBtn = document.getElementById('analytics-btn');
+            const analyticsContainer = document.getElementById('analytics-container');
+
+            analyticsBtn.classList.add('loading');
+            analyticsBtn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/${currentEditingAgent}/memories/analytics`, {
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    const analytics = await response.json();
+                    displayAnalytics(analytics);
+                } else {
+                    const error = await response.json();
+                    analyticsContainer.innerHTML = `<div class="error-message">${error.detail || 'Failed to load analytics'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                analyticsContainer.innerHTML = '<div class="error-message">Network error loading analytics</div>';
+            } finally {
+                analyticsBtn.classList.remove('loading');
+                analyticsBtn.textContent = 'Refresh Analytics';
+            }
+        }
+
+        function displayAnalytics(analytics) {
+            const container = document.getElementById('analytics-container');
+
+            container.innerHTML = `
+                <div class="memory-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">${analytics.total_memories}</div>
+                        <div class="stat-label">Total Memories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${Object.keys(analytics.memory_types).length}</div>
+                        <div class="stat-label">Memory Types</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${analytics.recent_activity.last_7_days}</div>
+                        <div class="stat-label">Last 7 Days</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${analytics.recent_activity.last_30_days}</div>
+                        <div class="stat-label">Last 30 Days</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div>
+                        <h4 style="margin-bottom: 12px;">Memory Types</h4>
+                        <div style="background: #2a2a2a; padding: 16px; border-radius: 8px;">
+                            ${Object.entries(analytics.memory_types).map(([type, count]) => `
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span>${type}</span>
+                                    <span style="color: #667eea;">${count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="margin-bottom: 12px;">Emotion Distribution</h4>
+                        <div style="background: #2a2a2a; padding: 16px; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Positive</span>
+                                <span style="color: #44ff44;">${analytics.emotion_distribution.positive}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Neutral</span>
+                                <span style="color: #999;">${analytics.emotion_distribution.neutral}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Negative</span>
+                                <span style="color: #ff4444;">${analytics.emotion_distribution.negative}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 12px;">Memory Sources</h4>
+                    <div style="background: #2a2a2a; padding: 16px; border-radius: 8px;">
+                        ${Object.entries(analytics.top_memory_sources).map(([source, count]) => `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>${source}</span>
+                                <span style="color: #667eea;">${count}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function deleteAgent(agentId) {
+            if (!confirm('Are you sure you want to delete this agent? This action cannot be undone and will delete all memories.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/${agentId}`, {
+                    method: 'DELETE',
+                    headers: getNgrokHeaders(true)
+                });
+
+                if (response.ok) {
+                    loadAgents();
+                    showSuccessMessage('Agent deleted successfully');
+                } else {
+                    const error = await response.json();
+                    showErrorMessage(error.detail || 'Failed to delete agent');
+                }
+            } catch (error) {
+                console.error('Error deleting agent:', error);
+                showErrorMessage('Network error while deleting agent');
+            }
+        }
+
+        // Chat functions
+        function openChat(agentId) {
+            // Find the agent in the current agents list
+            const agentElements = document.querySelectorAll('.agent-card:not(.create-agent-card)');
+            let targetAgent = null;
+
+            agentElements.forEach(element => {
+                const editBtn = element.querySelector('[onclick*="showEditProfileModal"]');
+                if (editBtn && editBtn.onclick.toString().includes(agentId)) {
+                    targetAgent = {
+                        agent_id: agentId,
+                        name: element.querySelector('.agent-name').textContent.replace('NCF', '').trim(),
+                        persona: element.querySelector('.agent-persona').textContent
+                    };
+                }
+            });
+
+            if (!targetAgent) {
+                console.error('Agent not found');
+                return;
+            }
+
+            currentAgent = targetAgent;
+            generateSessionId();
+
+            document.getElementById('chat-agent-name').textContent = targetAgent.name;
+            document.getElementById('chat-agent-avatar').textContent = targetAgent.name[0];
+
+            document.getElementById('agents-view').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'block';
+
+            // Clear previous messages
+            document.getElementById('chat-messages').innerHTML = '';
+
+            // Load existing chat history if any
+            loadChatHistory();
+
+            // If no history, show welcome message
+            if (chatHistory.length === 0) {
+                addMessage('assistant', `Hello! I'm ${targetAgent.name}. I have advanced NCF capabilities including narrative foundation, contextual memory, and reflective analysis. How can I help you today?`);
+            }
+        }
+
+        function generateSessionId() {
+            // Check if we have an existing session for this agent
+            const existingSessionKey = `current_session_${currentAgent.agent_id}`;
+            const existingSession = localStorage.getItem(existingSessionKey);
+
+            if (existingSession) {
+                sessionId = existingSession;
+            } else {
+                // Generate new session ID and store it
+                sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                localStorage.setItem(existingSessionKey, sessionId);
+            }
+        }
+
+        function addMessage(role, content) {
+            // Add to history array
+            chatHistory.push({ role, content, timestamp: Date.now() });
+
+            // Add to UI
+            addMessageToUI(role, content);
+
+            // Save to localStorage
+            saveChatHistory();
+        }
+
+        function addMessageToUI(role, content) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const avatar = role === 'user' ? 'U' : currentAgent.name[0];
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${content}</div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesContainer = document.getElementById('chat-messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message typing';
+            typingDiv.id = 'typing-indicator';
+
+            typingDiv.innerHTML = `
+                <div class="message-avatar">${currentAgent.name[0]}</div>
+                <div class="message-content typing-indicator">Thinking with NCF context...</div>
+            `;
+
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+
+            if (!message || !currentAgent) return;
+
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+
+            // Show typing indicator
+            addTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_BASE}/agents/${currentAgent.agent_id}/chat`, {
+                    method: 'POST',
+                    headers: getNgrokHeaders(true),
+                    body: JSON.stringify({
+                        message,
+                        session_id: sessionId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    removeTypingIndicator();
+                    addMessage('assistant', data.response);
+                } else {
+                    removeTypingIndicator();
+                    addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                removeTypingIndicator();
+                addMessage('assistant', 'Sorry, I encountered a network error. Please try again.');
+            }
+        }
+
+        function handleMessageKeypress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Utility functions
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            document.querySelector('#agents-view h2').insertAdjacentElement('afterend', successDiv);
+            setTimeout(() => successDiv.remove(), 5000);
+        }
+
+        function showErrorMessage(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.querySelector('#agents-view h2').insertAdjacentElement('afterend', errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('create-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+
+        document.getElementById('edit-profile-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeEditProfileModal();
+            }
+        });
+
+        document.getElementById('memory-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeMemoryModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // ESC to close modals
+            if (event.key === 'Escape') {
+                if (document.getElementById('create-modal').classList.contains('active')) {
+                    closeModal();
+                }
+                if (document.getElementById('edit-profile-modal').classList.contains('active')) {
+                    closeEditProfileModal();
+                }
+                if (document.getElementById('memory-modal').classList.contains('active')) {
+                    closeMemoryModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
