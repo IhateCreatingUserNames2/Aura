@@ -2010,86 +2010,125 @@
             }
 
             async showMarketplace() {
-                await this.loadFeaturedAgents();
-                this.displayMarketplace();
-            }
 
-            async loadFeaturedAgents() {
+                this.displayMarketplaceShell();
+                await this.loadAllPublicAgents();
+                this.displayAgentsInModal(this.allMarketplaceAgents);
+            }
+            async loadAllPublicAgents() {
+                console.log("Fetching all public and pre-built agents for marketplace...");
                 try {
-                    const response = await fetch(`${API_BASE}/prebuilt-agents?min_rating=4.5`, { headers: getNgrokHeaders(true) });
-                    if (response.ok) this.featuredAgents = await response.json();
-                } catch (error) { console.error('Error loading featured agents:', error); }
+                    // Create two promises, one for each endpoint
+                    const prebuiltPromise = fetch(`${API_BASE}/prebuilt-agents`, { headers: getNgrokHeaders(true) }).then(res => res.json());
+                    const publicPromise = fetch(`${API_BASE}/agents/public`, { headers: getNgrokHeaders(true) }).then(res => res.json());
+
+                    // Wait for both promises to resolve
+                    const [prebuiltAgents, publicAgents] = await Promise.all([prebuiltPromise, publicPromise]);
+
+                    // Combine and de-duplicate the lists
+                    const combinedAgents = [...prebuiltAgents, ...publicAgents];
+                    const uniqueAgents = Array.from(new Map(combinedAgents.map(agent => [agent.id || agent.agent_id, agent])).values());
+
+                    this.allMarketplaceAgents = uniqueAgents;
+                    console.log(`Loaded ${uniqueAgents.length} unique agents for the marketplace.`);
+
+                } catch (error) {
+                    console.error('Error loading marketplace agents:', error);
+                    const grid = document.getElementById('marketplace-grid');
+                    if (grid) grid.innerHTML = '<p style="color: #ff4444;">Failed to load marketplace agents.</p>';
+                }
             }
 
-            displayMarketplace() {
+            displayMarketplaceShell() {
+                // First, remove any existing marketplace modal to prevent duplicates
+                const existingModal = document.getElementById('marketplace-modal');
+                if (existingModal) existingModal.remove();
+
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
                 modal.id = 'marketplace-modal';
                 modal.innerHTML = `
                     <div class="modal-content" style="max-width: 1000px;">
                         <h2 style="margin-bottom: 24px;">Agent Marketplace</h2>
-                        <p style="color: #999; margin-bottom: 24px;">Discover pre-trained agents with developed personalities and rich memories</p>
-                        <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
-                            ${this.categories.map(cat => `<button class="btn btn-secondary btn-small ${cat === 'All' ? 'active' : ''}" onclick="marketplace.filterByCategory(this, '${cat}')" style="${cat === 'All' ? 'background: #667eea; color: white;' : ''}">${cat}</button>`).join('')}
+                        <p style="color: #999; margin-bottom: 24px;">Discover pre-trained and user-shared agents to clone.</p>
+                        <div class="marketplace-grid" id="marketplace-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; min-height: 200px;">
+                             <p>Loading agents...</p>
                         </div>
-                        <div class="marketplace-grid" id="marketplace-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
                         <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: center;"><button class="btn btn-secondary" onclick="marketplace.closeMarketplace()">Close</button></div>
                     </div>`;
                 document.body.appendChild(modal);
-                this.displayAgents(this.featuredAgents);
             }
 
-            displayAgents(agents) {
+            displayAgentsInModal(agents) {
                 const grid = document.getElementById('marketplace-grid');
+                if (!grid) return; // Exit if modal was closed before data arrived
+
                 grid.innerHTML = '';
+                if (agents.length === 0) {
+                    grid.innerHTML = '<p>No public agents found.</p>';
+                    return;
+                }
+
                 agents.forEach(agent => {
                     const card = document.createElement('div');
-                    card.style.cssText = `background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; transition: all 0.3s ease; cursor: pointer;`;
-                    card.onmouseover = () => { card.style.borderColor = '#667eea'; card.style.transform = 'translateY(-4px)'; };
-                    card.onmouseout = () => { card.style.borderColor = '#2a2a2a'; card.style.transform = 'translateY(0)'; };
-                    
-                    const stars = '★'.repeat(Math.floor(agent.rating));
-                    const systemBadge = `<span style="background:${agent.system_type === 'ceaf' ? '#667eea' : '#44aa44'}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${agent.system_type.toUpperCase()}</span>`;
-                    
+                    card.style.cssText = `background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; transition: all 0.3s ease;`;
+
+                    // Normalize data because the two endpoints have slightly different field names
+                    const agentId = agent.id || agent.agent_id;
+                    const agentName = agent.name;
+                    const shortDesc = agent.short_description || agent.persona;
+                    const systemType = agent.system_type || (agent.settings && agent.settings.system_type) || 'ncf';
+                    const archetype = agent.archetype || (agent.settings && agent.settings.archetype) || 'Custom';
+                    const rating = agent.rating || 0; // User agents might not have ratings yet
+                    const downloads = agent.download_count || 0;
+
+                    const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+                    const systemBadge = `<span style="background:${systemType === 'ceaf' ? '#667eea' : '#44aa44'}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${systemType.toUpperCase()}</span>`;
+
                     card.innerHTML = `
                         <div style="display: flex; align-items: center; margin-bottom: 16px;">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; margin-right: 16px;">${agent.name[0]}</div>
-                            <div style="flex: 1;"><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;"><h3 style="font-size: 18px; font-weight: 600; margin: 0;">${agent.name}</h3>${systemBadge}</div><div style="color: #999; font-size: 12px;">${agent.archetype.charAt(0).toUpperCase() + agent.archetype.slice(1)} • ${agent.maturity_level}</div></div>
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; margin-right: 16px;">${agentName[0]}</div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <h3 style="font-size: 18px; font-weight: 600; margin: 0;">${agentName}</h3>
+                                    ${systemBadge}
+                                </div>
+                                <div style="color: #999; font-size: 12px;">${archetype.charAt(0).toUpperCase() + archetype.slice(1)}</div>
+                            </div>
                         </div>
-                        <div style="margin-bottom: 16px; color: #ccc; font-size: 14px; line-height: 1.4;">${agent.short_description}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 12px; color: #666;"><span style="color: #ffd700;">${stars} ${agent.rating.toFixed(1)}</span><span>${agent.download_count} downloads</span></div>
-                        <button class="btn btn-primary" onclick="marketplace.selectAgent('${agent.id}')" style="width: 100%;">Clone Agent</button>`;
+                        <div style="margin-bottom: 16px; color: #ccc; font-size: 14px; line-height: 1.4; height: 60px; overflow: hidden;">${shortDesc}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 12px; color: #666;">
+                            <span style="color: #ffd700;">${stars} ${rating.toFixed(1)}</span>
+                            <span>${downloads} clones</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="marketplace.cloneAgent('${agentId}', '${agentName}')" style="width: 100%;">Clone Agent</button>`;
                     grid.appendChild(card);
                 });
             }
 
-            filterByCategory(btnElement, category) {
-                document.querySelectorAll('#marketplace-modal .btn-secondary').forEach(btn => { btn.style.background = '#2a2a2a'; btn.style.color = '#e0e0e0'; });
-                btnElement.style.background = '#667eea'; btnElement.style.color = 'white';
-                
-                let filtered = this.featuredAgents;
-                if (category !== 'All') {
-                    const map = {'Philosophy': 'philosopher', 'Creative': 'creative', 'Support': 'therapist', 'Education': 'teacher', 'Science': 'scientist'};
-                    if(map[category]) filtered = this.featuredAgents.filter(a => a.archetype === map[category]);
-                }
-                this.displayAgents(filtered);
-            }
-
-            async selectAgent(agentId) {
-                this.closeMarketplace();
-                const agent = this.featuredAgents.find(a => a.id === agentId);
-                if (agent) {
-                    showCreateModal();
-                    setTimeout(() => {
-                        selectCreationType('prebuilt');
-                        const cardElements = document.querySelectorAll('.prebuilt-agent-card');
-                        for(const card of cardElements) {
-                            if (card.textContent.includes(agent.name)) {
-                                card.click();
-                                break;
-                            }
-                        }
-                    }, 200);
+            async cloneAgent(agentId, agentName) {
+                console.log(`Cloning agent: ${agentId}`);
+                this.closeMarketplace(); // Close the marketplace modal
+                try {
+                    const response = await fetch(`${API_BASE}/agents/clone`, {
+                        method: 'POST',
+                        headers: getNgrokHeaders(true),
+                        body: JSON.stringify({
+                            source_agent_id: agentId,
+                            custom_name: `${agentName.replace(/ /g, '_')}_Clone`,
+                            clone_memories: true
+                        })
+                    });
+                    if (response.ok) {
+                        alert(`Successfully cloned '${agentName}'! It's now in your agent list.`);
+                        loadAgents(); // Refresh the main agent list
+                    } else {
+                        const err = await response.json();
+                        alert(`Failed to clone agent: ${err.detail}`);
+                    }
+                } catch (error) {
+                    console.error('Error cloning agent:', error);
+                    alert('A network error occurred while cloning the agent.');
                 }
             }
 
